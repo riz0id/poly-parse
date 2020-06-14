@@ -1,0 +1,15 @@
+source-repository-package
+  type:     git
+  location: https://github.com/riz0id/poly-source.git
+  tag:      0f1b4a23efeea84fb003076ac30ddb225d78b464
+
+source-repository-package
+  type:     git
+  location: https://github.com/fused-effects/fused-effects.git
+  tag:      653cd886ef75039c82e70a96965c89b25ab5663c
+
+package poly-lang
+  ghc-options: -Werror
+
+packages:
+  ./poly-parse.cabal

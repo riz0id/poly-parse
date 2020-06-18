@@ -86,3 +86,7 @@ test-suite poly-lang-tests
     , tasty-hunit    ^>= 0.10
     , text           >= 1.2.4.0
     , transformers
+
+source-repository head
+  type:     git
+  location: https://github.com/riz0id/poly-parse

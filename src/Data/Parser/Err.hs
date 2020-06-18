@@ -34,8 +34,8 @@ import           Data.Text.Prettyprint.Doc.Render.Terminal (AnsiStyle)
 -- | Error production information.
 --
 -- @since 0.1.0.0
-data Err = Err
-    { errInput    :: Input
+data Err s = Err
+    { errInput    :: Input s
     , errReason   :: Maybe (Doc AnsiStyle)
     , errExpected :: Set Text
     }
@@ -43,14 +43,14 @@ data Err = Err
 -- | Lens focusing on "Err.errReason".
 --
 -- @since 0.1.0.0
-reason' :: Lens' Err (Maybe (Doc AnsiStyle))
+reason' :: Lens' (Err s) (Maybe (Doc AnsiStyle))
 reason' = lens errReason (\s t -> s { errReason = t })
 {-# INLINE reason' #-}
 
 -- | Lens focusing on "Err.errExpected".
 --
 -- @since 0.1.0.0
-expected' :: Lens' Err (Set Text)
+expected' :: Lens' (Err s) (Set Text)
 expected' = lens errExpected (\s t -> s { errExpected = t })
 {-# INLINE expected' #-}
 
@@ -60,14 +60,14 @@ expected' = lens errExpected (\s t -> s { errExpected = t })
 -- >> error: unexpected input
 --
 -- @since 0.1.0.0
-emitPlainErr :: Doc AnsiStyle -> Err
+emitPlainErr :: Doc AnsiStyle -> (Err s)
 emitPlainErr msg = Err (Input emptyPos mempty []) (Just msg) mempty
 {-# INLINE CONLIKE emitPlainErr #-}
 
 -- | Injection from Error type into a Notice.
 --
 -- @since 0.1.0.0
-errToNotice :: FilePath -> Err -> Notice
+errToNotice :: FilePath -> Err s -> Notice
 errToNotice fp err = Notice
   { noticeLevel   = Just Error
   , noticeExcerpt = Excerpt

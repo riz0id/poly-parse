@@ -45,11 +45,11 @@ import           Data.Text.Prettyprint.Doc
 --
 -- @since 0.1.0.0
 runParser
-  :: forall m a b
-  .  (Input -> a -> m b)
-  -> (Err -> m b)
-  -> Input
-  -> ParserC m a
+  :: forall s m a b
+  .  (Input s -> a -> m b)
+  -> (Err s -> m b)
+  -> Input s
+  -> ParserC s m a
   -> m b
 runParser leaf fail input (ParserC m) = m leaf fail input
 {-# INLINE runParser #-}
@@ -60,7 +60,7 @@ runParser leaf fail input (ParserC m) = m leaf fail input
 runParserWithFile
   :: (MonadIO m, Has (Throw Notice) sig m)
   => FilePath
-  -> ParserC m a
+  -> ParserC Char m a
   -> m a
 runParserWithFile path parser = do
   input <- liftIO (readFile path)
@@ -68,25 +68,30 @@ runParserWithFile path parser = do
 {-# INLINE runParserWithFile #-}
 
 -- | @since 0.1.0.0
-runParserWith :: Has (Throw Notice) sig m => FilePath -> Input -> ParserC m a -> m a
+runParserWith
+  :: Has (Throw Notice) sig m
+  => FilePath
+  -> Input s
+  -> ParserC s m a
+  -> m a
 runParserWith fp input = runParser (const pure) (throwError . errToNotice fp) input
 {-# INLINE runParserWith #-}
 
 -- | The carrier of a church-encoded parser effect.
 --
 -- @since 0.1.0.0
-newtype ParserC m a = ParserC
+newtype ParserC s m a = ParserC
   { runParserC
     :: forall r
-    .  (Input -> a -> m r)
-    -> (Err -> m r)
-    -> Input
+    .  (Input s -> a -> m r)
+    -> (Err s -> m r)
+    -> Input s
     -> m r
   }
   deriving Functor
 
 -- | @since 0.1.0.0
-instance Applicative (ParserC m) where
+instance Applicative (ParserC s m) where
   pure a = ParserC $ \ k _ s -> k s a
   {-# INLINE pure #-}
 
@@ -94,14 +99,14 @@ instance Applicative (ParserC m) where
   {-# INLINE (<*>) #-}
 
 -- | @since 0.1.0.0
-instance Monad (ParserC m) where
+instance Monad (ParserC s m) where
   ParserC m >>= f = ParserC $ \ leaf fail ->
     m (\ inputs ->
       runParser leaf fail inputs . f) fail
   {-# INLINE (>>=) #-}
 
 -- | @since 0.1.0.0
-instance Alternative (ParserC m) where
+instance Alternative (ParserC s m) where
   empty = ParserC (\_ fail input -> fail (Err input Nothing mempty))
   {-# INLINE empty #-}
 
@@ -115,7 +120,7 @@ instance Alternative (ParserC m) where
   {-# INLINE (<|>) #-}
 
 -- | @since 0.1.0.0
-instance Algebra sig m => Algebra (Parser :+: sig) (ParserC m) where
+instance (Show s, Algebra sig m) => Algebra (Parser s :+: sig) (ParserC s m) where
   alg hdl sig ctx = ParserC $ \ leaf fail inputs -> case sig of
     L (Satisfy p f) -> case inputs^.str' of
       c : cs | Just x <- p c -> runParser leaf fail (inputs { str = cs }) (hdl . (<$ ctx) . f $ x)
@@ -127,14 +132,14 @@ instance Algebra sig m => Algebra (Parser :+: sig) (ParserC m) where
 
     R other -> thread (dst ~<~ hdl) other (pure ctx)
       >>= run . runParser (coerce leaf) (coerce fail) inputs
-      where dst :: ParserC Identity (ParserC m a) -> m (ParserC Identity a)
+      where dst :: ParserC s Identity (ParserC s m a) -> m (ParserC s Identity a)
             dst = run . runParser distParser (pure . cutfailk) inputs
   {-# INLINE alg #-}
 
-distParser :: Applicative m => Input -> ParserC m a -> Identity (m (ParserC Identity a))
+distParser :: Applicative m => Input s -> ParserC s m a -> Identity (m (ParserC s Identity a))
 distParser inputs parser = return (runParser (const (pure . pure)) cutfailk inputs parser)
 {-# INLINE distParser #-}
 
-cutfailk :: Applicative m => Err -> m (ParserC Identity a)
+cutfailk :: Applicative m => Err s -> m (ParserC s Identity a)
 cutfailk err = pure (ParserC (\ _ fail _ -> fail err))
 {-# INLINE cutfailk #-}

@@ -74,6 +74,6 @@ parensTest = testGroup "ParserC Parenthesis"
       result @?= RParens
   ]
 
-runParserTest :: Has (Lift IO) sig m => String -> ParserC m a -> m a
+runParserTest :: Has (Lift IO) sig m => String -> ParserC Char m a -> m a
 runParserTest input =
   runParser (const pure) (error . show . errExpected) (Input emptyPos mempty input)

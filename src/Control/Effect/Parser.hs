@@ -1,3 +1,7 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE Rank2Types          #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications    #-}
 
 -- | Module    :  Control.Effect.Parser
 -- Copyright   :  (c) Jacob Leach, 2020 - 2022
@@ -32,7 +36,7 @@ import           Data.Text
 -- \(\mathcal{O}(1)\).
 --
 -- @since 0.1.0.0
-char :: Has Parser sig m => Char -> m Char
+char :: Has (Parser Char) sig m => Char -> m Char
 char = passes . (==)
 {-# INLINE char #-}
 
@@ -41,7 +45,7 @@ char = passes . (==)
 -- \(\mathcal{O}(1)\).
 --
 -- @since 0.1.0.0
-passes :: Has Parser sig m => (Char -> Bool) -> m Char
+passes :: Has (Parser s) sig m => (s -> Bool) -> m s
 passes p = satisfy (\c -> if p c then Just c else Nothing) pure
 {-# INLINE passes #-}
 
@@ -50,7 +54,8 @@ passes p = satisfy (\c -> if p c then Just c else Nothing) pure
 -- \(\mathcal{O}(1)\).
 --
 -- @since 0.1.0.0
-option :: (Alternative m, Has Parser sig m) => m k -> m (Maybe k)
+option :: forall s m sig k. (Alternative m, Has (Parser s) sig m)
+       => m k -> m (Maybe k)
 option parser = (parser >>= return . Just) <|> return Nothing
 {-# INLINEABLE option #-}
 
@@ -59,14 +64,14 @@ option parser = (parser >>= return . Just) <|> return Nothing
 -- \(\mathcal{O}(n)\), where n is the number of whitespace characters.
 --
 -- @since 0.1.0.0
-skipSpace :: (Alternative m, Has Parser sig m) => m ()
+skipSpace :: (Alternative m, Has (Parser Char) sig m) => m ()
 skipSpace = void (many (passes isSpace))
 {-# INLINE skipSpace #-}
 
 -- | Takes the result of a parse inbetween two heterogeneous combinators.
 --
 -- @since 0.1.0.0
-between :: Has Parser sig m => m o -> m k -> m c -> m k
+between :: Has (Parser s) sig m => m o -> m k -> m c -> m k
 between o b c = o *> b <* c
 {-# INLINEABLE between #-}
 
@@ -75,6 +80,6 @@ between o b c = o *> b <* c
 -- \(\mathcal{O}(1)\).
 --
 -- @since 0.1.0.0
-(<!>) :: Has Parser sig m => m k -> Text -> m k
-(<!>) = flip unexpected
+(<!>) :: forall s sig m k. Has (Parser s) sig m => m k -> Text -> m k
+(<!>) = flip (unexpected @s)
 {-# INLINE (<!>) #-}

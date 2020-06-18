@@ -1,7 +1,7 @@
 cabal-version: 2.2
 
 name:         poly-parse
-version:      0.1.0.0
+version:      0.1.0.1
 synopsis:     Experimental parsing techniques
 description:  Alien parsing through mathematics to get reasonable parsing
 bug-reports:  https://github.com/riz0id/poly-source/issues
@@ -44,18 +44,45 @@ library
 
   exposed-modules:
       Control.Effect.Parser
+    , Control.Effect.Parser.Internal
     , Control.Carrier.Parser
     , Data.Parser.Input
     , Data.Parser.Err
+    , Data.Parser.Excerpt
+    , Data.Parser.Notice
 
   build-depends:
-      base               >= 4.13 && <4.14
-    , comonad            >= 5.0.6
-    , containers >= 0.6.2.1
-    , fused-effects      >= 1.0.2.0
+      base                        >= 4.13 && <4.14
+    , comonad                     >= 5.0.6
+    , containers                  >= 0.6.2.1
+    , fused-effects               >= 1.0.2.0
     , fused-effects-lens
-    , lens               >= 4.19.2
-    , poly-source        >= 0.1.0.0
-    , prettyprinter      ^>= 1.5
+    , lens                        >= 4.19.2
+    , poly-source                 >= 0.1.0.1
+    , prettyprinter               ^>= 1.5
     , prettyprinter-ansi-terminal ^>= 1.1
-    , profunctors        >= 5.5.2
+    , profunctors                 >= 5.5.2
+    , text >= 1.2.4.0
+
+test-suite poly-lang-tests
+  import:         common
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is:        Test.hs
+
+  other-modules:
+    Parsers
+
+  build-depends:
+      base
+    , containers
+    , fused-effects
+    , hedgehog       ^>= 1
+    , hedgehog-fn    ^>= 1
+    , poly-source    >= 0.1.0.1
+    , poly-parse
+    , tasty          ^>= 1.2
+    , tasty-hedgehog ^>= 1
+    , tasty-hunit    ^>= 0.10
+    , text           >= 1.2.4.0
+    , transformers

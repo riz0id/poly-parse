@@ -17,7 +17,7 @@
 
 module Control.Effect.Parser
   ( -- * Parser Combinators
-    char, between, option, skipSpace, passes
+    peek, char, between, option, skipSpace, passes
     -- ** Parser Operators
   , (<!>)
     -- * Re-exports
@@ -30,6 +30,12 @@ import           Control.Effect.Parser.Internal
 import           Control.Monad
 import           Data.Char
 import           Data.Text
+
+-- | Peek at the current element in the Parser's input.
+--
+-- @since 0.1.0.0
+peek :: Has (Parser s) sig m => m s
+peek = satisfy Just pure
 
 -- | Tests if a character matches the predicate @p@
 --

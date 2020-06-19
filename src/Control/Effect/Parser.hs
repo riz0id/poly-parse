@@ -71,7 +71,7 @@ skipSpace = void (many (passes isSpace))
 -- | Takes the result of a parse inbetween two heterogeneous combinators.
 --
 -- @since 0.1.0.0
-between :: Has (Parser s) sig m => m o -> m k -> m c -> m k
+between :: Has (Parser s) sig m => m k -> m k -> m k -> m k
 between o b c = o *> b <* c
 {-# INLINEABLE between #-}
 

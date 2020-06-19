@@ -36,6 +36,7 @@ import           Data.Text
 -- @since 0.1.0.0
 peek :: Has (Parser s) sig m => m s
 peek = satisfy Just pure
+{-# INLINE CONLIKE peek #-}
 
 -- | Tests if a character matches the predicate @p@
 --

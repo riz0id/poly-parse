@@ -1,7 +1,7 @@
 source-repository-package
   type:     git
   location: https://github.com/riz0id/poly-source.git
-  tag:      6db8c1890b4891eb8d980a594480cd9fc595a428
+  tag:      be13fc8922459b9dc0efc568411e01baf2e5f550
 
 source-repository-package
   type:     git

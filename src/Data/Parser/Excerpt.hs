@@ -32,6 +32,6 @@ data Excerpt = Excerpt
     deriving (Eq, Ord, Show)
 
 -- | @since 0.1.0.0
-instance HasSpanLike Excerpt Pos where
+instance HasInterval Excerpt Pos where
   start' = lens (spanStart . excerptSpan) (\(Excerpt p l s) t -> Excerpt p l s { spanStart = t })
   end'   = lens (spanEnd   . excerptSpan) (\(Excerpt p l s) t -> Excerpt p l s { spanEnd   = t })

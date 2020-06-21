@@ -1,6 +1,8 @@
-{-# LANGUAGE LambdaCase       #-}
-{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeApplications      #-}
+{-# LANGUAGE TypeSynonymInstances  #-}
 
 -- | Module    :  Data.Parser.Input
 -- Copyright   :  (c) Jacob Leach, 2020 - 2022
@@ -16,37 +18,65 @@
 
 module Data.Parser.Input
   ( Input(..)
+    -- ** Input Classes
+  , HasAdvance(..)
     -- ** Input Lenses
-  , str'
-  , delta'
+  , input'
+    -- ** Input Operations
   ) where
 
-import           Control.Effect.Lens
-import           Control.Effect.State
-import           Control.Lens         (Lens', lens)
+import           Control.Lens (Lens', lens)
 import           Data.Source
+import           Data.Text
 
 -- | Parser "Input" information.
 --
 -- @since 0.1.0.0
 data Input s = Input
-    { position :: {-# UNPACK #-} !Pos
-    , inpRange :: {-# UNPACK #-} !Range
-    , str      :: ![s]
+    { inputPosition :: {-# UNPACK #-} !Pos
+    , inputRange    :: {-# UNPACK #-} !Range
+    , inputData     :: !s
     }
     deriving (Eq, Ord, Show)
 
 -- | @since 0.1.0.0
 instance HasPos (Input s) where
-  pos' = lens position (\s t -> s { position = t })
+  pos' = lens inputPosition (\s t -> s { inputPosition = t })
 
 -- | @since 0.1.0.0
-instance HasSpanLike (Input s) Delta where
-  start' = lens (rangeStart . inpRange) (\(Input p r s) t -> Input p (r { rangeStart = t}) s)
-  end'   = lens (rangeEnd   . inpRange) (\(Input p r s) t -> Input p (r { rangeEnd   = t}) s)
+instance HasRange (Input s) where
+  range' = lens inputRange (\s t -> s { inputRange = t })
+
+-- | @since 0.1.0.0
+instance HasInterval (Input s) Delta where
+  start' = lens (rangeStart . inputRange) (\(Input p r s) t -> Input p (r { rangeStart = t}) s)
+  end'   = lens (rangeEnd   . inputRange) (\(Input p r s) t -> Input p (r { rangeEnd   = t}) s)
 
 -- | 'str' lens for inputs.
 --
 -- @since 0.1.0.0
-str' :: Lens' (Input s) [s]
-str' = lens str (\s t -> s { str = t })
+input' :: Lens' (Input s) s
+input' = lens inputData (\s t -> s { inputData = t })
+
+-- | Whether a input can be advanced in a normal way. This includes anything
+-- that is nominally a recursive type: Lists, Text, etc...
+--
+-- @since 0.1.0.0
+class HasAdvance a where
+  advanceInput :: Input a -> Input a
+
+-- | @since 0.1.0.0
+instance HasAdvance String where
+  advanceInput (Input p r i) = case i of
+    '\n' : cs -> Input (moveNewline p) (advanceEnd r) cs
+    _    : cs -> Input (moveColumn  p) (advanceEnd r) cs
+    []        -> Input p r i
+  {-# INLINE advanceInput #-}
+
+-- | @since 0.1.0.0
+instance HasAdvance Text where
+  advanceInput (Input p r ts) = case uncons ts of
+    Just ('\n', ts) -> Input (moveNewline p) (advanceEnd r) ts
+    Just (_   , ts) -> Input (moveColumn  p) (advanceEnd r) ts
+    Nothing         -> Input p r ts
+  {-# INLINE advanceInput #-}

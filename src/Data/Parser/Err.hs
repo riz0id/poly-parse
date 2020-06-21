@@ -60,8 +60,8 @@ expected' = lens errExpected (\s t -> s { errExpected = t })
 -- >> error: unexpected input
 --
 -- @since 0.1.0.0
-emitPlainErr :: Doc AnsiStyle -> (Err s)
-emitPlainErr msg = Err (Input emptyPos mempty []) (Just msg) mempty
+emitPlainErr :: Monoid s => Doc AnsiStyle -> (Err s)
+emitPlainErr msg = Err (Input emptyPos mempty mempty) (Just msg) mempty
 {-# INLINE CONLIKE emitPlainErr #-}
 
 -- | Injection from Error type into a Notice.

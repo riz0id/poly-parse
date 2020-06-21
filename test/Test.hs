@@ -1,9 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications #-}
 
 -- |
 
 import           Control.Algebra
 import           Control.Carrier.Parser
+import Control.Effect.Parser
 import           Control.Effect.Lift
 import           Control.Monad.IO.Class
 import           Data.Parser.Err
@@ -15,16 +17,20 @@ import           Test.Tasty
 import           Test.Tasty.HUnit
 
 main :: IO ()
-main = defaultMain $ testGroup "unit tests"
-  [ parserTests
-  ]
+main = do
+  runParserTest "a" testParseError
+  defaultMain $ testGroup "unit tests"
+    [ parserTests
+    ]
+
+testParseError :: Has Parser sig m => m Parens
+testParseError = lparen <!> "lala"
 
 parserTests :: TestTree
 parserTests = testGroup "ParserC (Church)"
   [ parensTest
   , symbolTest
   , digitTest
-  , sexpTest
   ]
 
 sexpTest :: TestTree
@@ -74,6 +80,6 @@ parensTest = testGroup "ParserC Parenthesis"
       result @?= RParens
   ]
 
-runParserTest :: Has (Lift IO) sig m => String -> ParserC Char m a -> m a
+runParserTest :: Has (Lift IO) sig m => String -> ParserC String m a -> m a
 runParserTest input =
   runParser (const pure) (error . show . errExpected) (Input emptyPos mempty input)

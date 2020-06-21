@@ -29,9 +29,9 @@ import           Data.Text
 -- | Syntax for a parser effect.
 --
 -- @since 0.1.0.0
-data Parser s m k where
-  Satisfy    :: (s -> Maybe a) -> (a -> m k) -> Parser s m k
-  Unexpected :: Text -> m k -> Parser s m k
+data Parser m k where
+  Satisfy    :: (Char -> Maybe a) -> (a -> m k) -> Parser m k
+  Unexpected :: Text -> m k -> Parser m k
 
 -- | Satisfication of a predicate coupled with a transformation on the result
 -- type of the predicate.
@@ -39,7 +39,7 @@ data Parser s m k where
 -- \(\mathcal{O}(1)\).
 --
 -- @since 0.1.0.0
-satisfy :: Has (Parser s) sig m => (s -> Maybe a) -> (a -> m k) -> m k
+satisfy :: Has Parser sig m => (Char -> Maybe a) -> (a -> m k) -> m k
 satisfy p f = send (Satisfy p f)
 {-# INLINE CONLIKE satisfy #-}
 
@@ -48,6 +48,6 @@ satisfy p f = send (Satisfy p f)
 -- \(\mathcal{O}(1)\).
 --
 -- @since 0.1.0.0
-unexpected :: forall s sig m k. Has (Parser s) sig m => Text -> m k -> m k
-unexpected msg parser = send @(Parser s) (Unexpected msg parser)
+unexpected :: Has Parser sig m => Text -> m k -> m k
+unexpected msg parser = send (Unexpected msg parser)
 {-# INLINE CONLIKE unexpected #-}

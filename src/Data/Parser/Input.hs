@@ -25,7 +25,7 @@ module Data.Parser.Input
     -- ** Input Operations
   ) where
 
-import           Control.Lens (Lens', lens)
+import           Control.Lens (Lens', lens, (^.))
 import           Data.Source
 import           Data.Text
 
@@ -67,16 +67,17 @@ class HasAdvance a where
 
 -- | @since 0.1.0.0
 instance HasAdvance String where
-  advanceInput (Input p r i) = case i of
-    '\n' : cs -> Input (moveNewline p) (advanceEnd r) cs
-    _    : cs -> Input (moveColumn  p) (advanceEnd r) cs
-    []        -> Input p r i
-  {-# INLINE advanceInput #-}
+  advanceInput i = i
+    { inputRange = advanceEnd (i^.range')
+    , inputData = case inputData i of
+        c : cs -> cs
+        []     -> []
+    }
 
 -- | @since 0.1.0.0
 instance HasAdvance Text where
-  advanceInput (Input p r ts) = case uncons ts of
+  advanceInput (Input p r txt) = case uncons txt of
     Just ('\n', ts) -> Input (moveNewline p) (advanceEnd r) ts
     Just (_   , ts) -> Input (moveColumn  p) (advanceEnd r) ts
-    Nothing         -> Input p r ts
+    Nothing         -> Input p r mempty
   {-# INLINE advanceInput #-}

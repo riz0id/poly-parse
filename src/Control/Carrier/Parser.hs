@@ -144,7 +144,7 @@ instance MonadIO m => MonadIO (ParserC s m) where
   {-# INLINE liftIO #-}
 
 -- | @since 0.1.0.0
-instance Algebra sig m => Algebra (Parser Char :+: sig) (ParserC String m) where
+instance Algebra sig m => Algebra (Parser :+: sig) (ParserC String m) where
   alg hdl sig ctx = ParserC $ \ leaf fail inputs -> case sig of
     L (Satisfy p f) -> case inputs^.input' of
       c : _ | Just x <- p c -> runParser leaf fail (advanceInput inputs) (hdl . (<$ ctx) . f $ x)
@@ -159,7 +159,7 @@ instance Algebra sig m => Algebra (Parser Char :+: sig) (ParserC String m) where
   {-# INLINE alg #-}
 
 -- | @since 0.1.0.0
-instance Algebra sig m => Algebra (Parser Char :+: sig) (ParserC Text m) where
+instance Algebra sig m => Algebra (Parser :+: sig) (ParserC Text m) where
   alg hdl sig ctx = ParserC $ \ leaf fail inputs -> case sig of
     L (Satisfy p f) -> case uncons (inputs^.input') of
       Just (c, _) | Just x <- p c -> runParser leaf fail (advanceInput inputs) (hdl . (<$ ctx) . f $ x)

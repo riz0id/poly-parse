@@ -16,6 +16,7 @@ module Data.Parser.Err
     -- ** Err Lenses
   , reason', expected'
     -- ** Errs
+  , prettyColorErr
   , emitPlainErr
   , errToNotice
   ) where
@@ -26,10 +27,11 @@ import           Data.Parser.Excerpt
 import           Data.Parser.Input
 import           Data.Parser.Notice
 import           Data.Set
+import           Data.Source
 import           Data.Text
-import           Data.Text.Prettyprint.Doc                 (Doc, pretty)
-import Data.Source
-import           Data.Text.Prettyprint.Doc.Render.Terminal (AnsiStyle)
+import           Data.Text.Prettyprint.Doc
+import           Data.Text.Prettyprint.Doc.Render.Terminal (AnsiStyle,
+                                                            Color (..), color)
 
 -- | Error production information.
 --
@@ -39,6 +41,17 @@ data Err s = Err
     , errReason   :: Maybe (Doc AnsiStyle)
     , errExpected :: Set Text
     }
+    deriving Show
+
+instance Pretty s => Pretty (Err s) where
+  pretty err = pretty "error:" <+> vsep (fmap pretty . toList $ err^.expected')
+
+-- | Colored version for a pretty error
+--
+-- @since 0.1.0.0
+prettyColorErr :: Err s -> Doc AnsiStyle
+prettyColorErr err = annotate (color Red) (pretty "error:")
+                 <+> vsep (fmap pretty . toList $ err^.expected')
 
 -- | Lens focusing on "Err.errReason".
 --

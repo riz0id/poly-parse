@@ -1,7 +1,3 @@
-{-# LANGUAGE Rank2Types          #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications    #-}
-
 -- |
 
 module Parsers where
@@ -26,30 +22,30 @@ data Parens = LParens
     | RParens
     deriving (Eq, Enum, Show)
 
-lparen :: Has (Parser Char) sig m => m Parens
+lparen :: Has Parser sig m => m Parens
 lparen = char '(' >> return LParens
 
-rparen :: Has (Parser Char) sig m => m Parens
+rparen :: Has Parser sig m => m Parens
 rparen = char ')' >> return RParens
 
-symbol :: (Alternative m, Has (Parser Char) sig m) => m Token
+symbol :: (Alternative m, Has Parser sig m) => m Token
 symbol = do
   x  <- passes isAlpha
   xs <- many (passes (\c -> isDigit c || isAlpha c || c == '-'))
   return (TSym (pack (x : xs)))
 
-digit :: forall m sig. (Alternative m, Has (Parser Char) sig m) => m Number
+digit :: (Alternative m, Has Parser sig m) => m Number
 digit = do
   nats <- nums
-  decs <- option @Char (char '.' *> nums)
+  decs <- option (char '.' *> nums)
   return $ case decs of
     Just x  -> Decimal nats x
     Nothing -> WholeNum nats
 
-nums :: (Alternative m, Has (Parser Char) sig m) => m Text
+nums :: (Alternative m, Has Parser sig m) => m Text
 nums = pack <$> some (passes isDigit)
 
-sexp :: (Alternative m, Has (Parser Char) sig m) => m [Token]
+sexp :: (Alternative m, Has Parser sig m) => m [Token]
 sexp = some $ do
   skipSpace
   (TParens <$> lparen)
